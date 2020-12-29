@@ -7,7 +7,7 @@ type PSO* = object
     n_particles, dimensions, n_iterations: int
     w, c1, c2: float
     bounds: seq[float]
-    particles, velocity, pbest, gbest: Tensor[float32]
+    particles, velocity, pbest, gbest: Tensor[float]
     pbest_position, gbest_position: seq[int]
     pbest_value: seq[float]
     gbest_value: float
@@ -22,15 +22,15 @@ proc optimizerPSO*(n_particles, dimensions, n_iterations: int,
     result.c1 = c1
     result.c2 = c2
     result.bounds = bounds 
-    result.velocity = zeros[float32]([n_particles, dimensions])
-    result.particles = randomTensor[float32](n_particles, dimensions, 1'f32)
+    result.velocity = zeros[float]([n_particles, dimensions])
+    result.particles = randomTensor[float](n_particles, dimensions, 1'f)
     result.pbest_value = newSeq[float](n_particles)
     for i in 1..result.particles.shape[0]:
         result.pbest_value[i] = Inf
     result.gbest_value = Inf
 
 # trying dummy fitness function
-proc fitness*(particles: Tensor[float32]): float =
+proc fitness*(particles: Tensor[float]): float =
     return  (particles[0] * particles[0]) + (particles[1] * particles[1]) + 1.0
 
 # set pbest
@@ -60,7 +60,7 @@ proc update*(p:PSO) =
 
 # move all particles
 proc update_particles*(p:PSO) =
-    var new_velocity: Tensor[float32]
+    var new_velocity: Tensor[float]
     var r: float
     for i in 1..p.particles.shape[0]:
         for j in 1..p.particles.shape[1]:
