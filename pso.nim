@@ -77,7 +77,7 @@ proc update_particles*(p: var PSO) =
             p.velocity[i,j] = new_velocity
             p.update()
 
-# TODO: proc check_bounds*(p: var PSO)
+# check bounds to avoid diverge
 proc check_bounds*(p: var PSO) = 
     for i in 0..<p.particles.shape[0]:
         for j in 0..<p.particles.shape[1]:
