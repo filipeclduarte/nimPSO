@@ -7,7 +7,8 @@ type PSO* = object
     n_particles, dimensions, n_iterations: int
     w, c1, c2: float
     bounds: seq[float]
-    particles, velocity, pbest, gbest: Tensor[float]
+    particles, velocity, pbest: Tensor[float]
+    gbest: Tensor[float]
     gbest_position: int
     pbest_value: seq[float]
     gbest_value: float
@@ -24,6 +25,7 @@ proc optimizerPSO*(n_particles, dimensions, n_iterations: int,
     result.bounds = bounds 
     result.velocity = zeros[float]([n_particles, dimensions])
     result.particles = randomTensor[float](n_particles, dimensions, 1'f)
+    result.pbest = result.particles
     result.pbest_value = newSeq[float](n_particles)
     for i in 0..<result.particles.shape[0]:
         result.pbest_value[i] = Inf
@@ -36,8 +38,11 @@ proc fitness*(particles: Tensor[float]): float =
 # set pbest
 proc set_pbest*(p: var PSO) =
     var fitness_candidate: float
+    var particles_temp: Tensor[float]
     for i in 0..<p.particles.shape[0]:
-        fitness_candidate = fitness(p.particles[i,_])
+        particles_temp = p.particles[i,_].reshape(p.dimensions)
+        # fitness_candidate = fitness(p.particles[i,_])
+        fitness_candidate = fitness(particles_temp)
         if p.pbest_value[i] > fitness_candidate:
             p.pbest_value[i] = fitness_candidate
             p.pbest[i,_] = p.particles[i,_]
@@ -45,17 +50,21 @@ proc set_pbest*(p: var PSO) =
 # set gbest
 proc set_gbest*(p: var PSO) =
     var best_fitness_candidate: float
+    var particles_temp: Tensor[float]
     for i in 0..<p.particles.shape[0]:
-        best_fitness_candidate = fitness(p.particles[i,_])
+        particles_temp = p.particles[i,_].reshape(p.dimensions)
+        # best_fitness_candidate = fitness(p.particles[i,_])
+        best_fitness_candidate = fitness(particles_temp)
         if p.gbest_value > best_fitness_candidate:
             p.gbest_value = best_fitness_candidate
             p.gbest_position = i
-            p.gbest = p.particles[i,_]
+            p.gbest = p.particles[i,_].reshape(p.dimensions)
 
 # move particle
 proc update*(p: var PSO) =
     for i in 0..<p.particles.shape[0]:
-        p.particles[i,_] = p.particles[i,_] +. p.velocity[i,_]
+        for j in 0..<p.particles.shape[1]:
+            p.particles[i,j] = p.particles[i,j] + p.velocity[i,j]
 
 # move all particles
 proc update_particles*(p: var PSO) =
@@ -74,7 +83,7 @@ proc update_particles*(p: var PSO) =
 let
     n_particles = 30
     dimension = 2
-    n_iterations = 100
+    n_iterations = 50
     w = 0.9
     c1 = 1.5
     c2 = 1.5
@@ -82,17 +91,15 @@ let
 
 var pso = optimizerPSO(n_particles, dimension, n_iterations, w, c1, c2, bounds)
 
-echo "pso: ", pso
+# echo "pso: ", pso
 
 var iterations = 0
 while iterations < n_iterations:
+    echo "iter: ", iterations
+    echo "gbest_value: ", pso.gbest_value
     pso.set_pbest()
     pso.set_gbest()
-
     pso.update_particles()
-
     # TODO: checking bounds
     iterations += 1
-
-    echo "iteration: ", iterations
-    echo "gbest_value: ", pso.gbest_value
+    
