@@ -1,4 +1,3 @@
-# trabalhando com arraymancer
 import arraymancer
 import sequtils
 import random
