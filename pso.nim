@@ -78,6 +78,14 @@ proc update_particles*(p: var PSO) =
             p.update()
 
 # TODO: proc check_bounds*(p: var PSO)
+proc check_bounds*(p: var PSO) = 
+    for i in 0..<p.particles.shape[0]:
+        for j in 0..<p.particles.shape[1]:
+            if p.particles[i,j] < p.bounds[0]:
+                p.particles[i,j] = p.bounds[0]
+            if p.particles[i,j] > p.bounds[1]:
+                p.particles[i,j] = p.bounds[1]
+            
 
 # testing
 let
@@ -97,9 +105,11 @@ var iterations = 0
 while iterations < n_iterations:
     echo "iter: ", iterations
     echo "gbest_value: ", pso.gbest_value
+    
     pso.set_pbest()
     pso.set_gbest()
     pso.update_particles()
-    # TODO: checking bounds
+    pso.check_bounds()
+
     iterations += 1
     

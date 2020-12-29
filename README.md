@@ -2,5 +2,6 @@
 
 TODO:
 
-    - check_bounds
+    - generalize the fitness function
+    
     
