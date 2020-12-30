@@ -1,5 +1,5 @@
 import arraymancer
-import sequtils
+import sequtils, strutils
 import random
 
 # PSO object
@@ -7,7 +7,8 @@ type PSO* = object
     n_particles, dimensions, n_iterations: int
     w, c1, c2: float
     bounds: seq[float]
-    particles, velocity, pbest: Tensor[float]
+    particles, velocity: Tensor[float]
+    pbest: Tensor[float]
     gbest: Tensor[float]
     gbest_position: int
     pbest_value: seq[float]
@@ -32,8 +33,12 @@ proc optimizerPSO*(n_particles, dimensions, n_iterations: int,
     result.gbest_value = Inf
 
 # trying dummy fitness function
-proc fitness*(particles: Tensor[float]): float =
-    return  (particles[0] * particles[0]) + (particles[1] * particles[1]) + 1.0
+proc fitness*(particles: Tensor[float], dimension: int): float =
+    result = 1.0
+    for dim in 0..<dimension: 
+        result += particles[dim] * particles[dim]
+    return result
+    # return  (particles[0] * particles[0]) + (particles[1] * particles[1]) + 1.0
 
 # set pbest
 proc set_pbest*(p: var PSO) =
@@ -42,7 +47,7 @@ proc set_pbest*(p: var PSO) =
     for i in 0..<p.particles.shape[0]:
         particles_temp = p.particles[i,_].reshape(p.dimensions)
         # fitness_candidate = fitness(p.particles[i,_])
-        fitness_candidate = fitness(particles_temp)
+        fitness_candidate = fitness(particles_temp, p.dimensions)
         if p.pbest_value[i] > fitness_candidate:
             p.pbest_value[i] = fitness_candidate
             p.pbest[i,_] = p.particles[i,_]
@@ -54,7 +59,7 @@ proc set_gbest*(p: var PSO) =
     for i in 0..<p.particles.shape[0]:
         particles_temp = p.particles[i,_].reshape(p.dimensions)
         # best_fitness_candidate = fitness(p.particles[i,_])
-        best_fitness_candidate = fitness(particles_temp)
+        best_fitness_candidate = fitness(particles_temp, p.dimensions)
         if p.gbest_value > best_fitness_candidate:
             p.gbest_value = best_fitness_candidate
             p.gbest_position = i
@@ -87,15 +92,25 @@ proc check_bounds*(p: var PSO) =
                 p.particles[i,j] = p.bounds[1]
             
 
+# user input
+echo "How many particles? "
+var n_particles = readLine(stdin).parseInt()
+
+echo "How many dimensions? "
+var dimension = readLine(stdin).parseInt()
+
+echo "How many iterations? "
+var n_iterations = readLine(stdin).parseInt()
+
 # testing
 let
-    n_particles = 30
-    dimension = 2
-    n_iterations = 50
-    w = 0.9
-    c1 = 1.5
-    c2 = 1.5
-    bounds = @[-1.0, 1.0]
+    # n_particles = 100
+    # dimension = 15
+    # n_iterations = 200
+    w = 0.8
+    c1 = 1.496
+    c2 = 1.496
+    bounds = @[0.0, 1.0]
 
 var pso = optimizerPSO(n_particles, dimension, n_iterations, w, c1, c2, bounds)
 
@@ -112,4 +127,6 @@ while iterations < n_iterations:
     pso.check_bounds()
 
     iterations += 1
-    
+
+echo "gbest: ", pso.gbest
+# echo "pbest: ", pso.pbest
